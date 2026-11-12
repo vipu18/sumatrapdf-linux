@@ -2662,6 +2662,9 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y) {
     HideToolbarHoverDropdown(win);
     win->pressOnlyDeselected = false;
     RefHoverOnCanvasLeftButtonDown(win->refHover);
+    if (MeasurementHandleClick(win, Point{x, y})) {
+        return;
+    }
     if (ReadingBarOnLeftDown(win, x, y)) {
         return;
     }
