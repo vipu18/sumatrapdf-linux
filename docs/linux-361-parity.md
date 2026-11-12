@@ -14,7 +14,7 @@ implementation. This is **not** a 3.6.1-equivalent release certification.
 | Printing | `src/ng/Print_posix.cpp`; Linux daily CI checks PDF and spooler behavior | Implemented; native interactive printing differs from Win32 |
 | Read aloud | `src/ng/ReadAloud_linux.cpp` | Implemented; accessibility/UI parity unverified |
 | PDF scripts | `src/ng/README.md` documents a GPUI dialog and MuPDF JS child process | Implemented on Linux; needs test |
-| Calibrated measurement | `src/ng/README.md` explicitly states `CmdMeasure` is Windows-only | **Missing** |
+| Calibrated measurement | Native GPUI command now accepts two clicks and calculates document-space distance in points | **Partially ported**; Windows toolbar, area/radius/guides, calibration, overlays and snapping missing |
 | Caption overlay | `src/ng/README.md` documents Windows-only `CmdToggleCaption` | Platform-specific gap |
 | KDE taskbar identity | `src/ng/linux/sumatrapdf.desktop` exists; live Wayland app ID unverified | Needs runtime test |
 | File format associations/icons | `src/ng/linux/sumatrapdf.desktop`, `src/ng/linux/icons/` | Present; new package now includes them |
@@ -46,7 +46,9 @@ local build version, not a claim of full 3.6.1 compatibility.
 
 ## Next engineering task
 
-Port `CmdMeasure` using GPUI and shared document geometry. Start by comparing
+Finish the GPUI `CmdMeasure` tool using shared document geometry. The initial
+length-measurement command is implemented but is not Windows-compatible yet.
+Continue by comparing
 the Windows measurement handlers and command availability, write focused
 geometry/calibration tests, implement the Linux interaction, and validate
 against the Windows reference behavior. Do not add a second rendering engine.
