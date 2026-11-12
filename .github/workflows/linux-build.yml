@@ -1,5 +1,5 @@
 
-name: Build SumatraPDF Linux (3.6.1 Base)
+name: Build SumatraPDF ng Linux
 
 on:
   workflow_dispatch:
@@ -7,6 +7,7 @@ on:
     branches:
       - master
       - linux-port
+      - linux-361-parity-baseline
 
 permissions:
   contents: read
@@ -33,10 +34,22 @@ jobs:
             pango \
             gdk-pixbuf2 \
             glib2 \
+            fontconfig \
+            ttf-dejavu \
+            ttf-liberation \
             openssl \
             zstd \
             file \
             shadow
+
+      - name: Verify font configuration for rendering tests
+        shell: bash
+        run: |
+          fc-cache -f
+          fc-list | head -n 5 || true
+          test -n "$(fc-match -f '%{file}' sans-serif)"
+          test -n "$(fc-match -f '%{file}' serif)"
+          test -n "$(fc-match -f '%{file}' monospace)"
 
       - name: Checkout fork
         uses: actions/checkout@v4
@@ -60,14 +73,14 @@ jobs:
           echo "Official release: $RELEASE_COMMIT"
           echo "Building commit: $(git rev-parse HEAD)"
 
-          if ! git merge-base --is-ancestor \
-            "$RELEASE_COMMIT" HEAD; then
-            echo "::error::Fork does not contain the official 3.6.1 release commit."
-            echo "Use a branch containing both the release history and Linux port."
-            exit 1
+          if git merge-base --is-ancestor "$RELEASE_COMMIT" HEAD; then
+            echo "RELEASE_361_ANCESTRY=yes" >> "$GITHUB_ENV"
+            echo "Verified: the official 3.6.1 release is an ancestor."
+          else
+            echo "RELEASE_361_ANCESTRY=no" >> "$GITHUB_ENV"
+            echo "::warning::The Linux fork does not descend from the official 3.6.1 release."
+            echo "Build will use this fork's source. Full 3.6.1 parity is NOT established."
           fi
-
-          echo "Verified: 3.6.1 is an ancestor."
 
       - name: Check native Linux compatibility
         shell: bash
@@ -152,6 +165,7 @@ jobs:
           cp out/linux/rel/SumatraPDF packaging/
 
           cp src/ng/linux/sumatrapdf.desktop packaging/
+          cp src/ng/linux/sumatrapdf.xml packaging/
           cp src/ng/linux/icons/sumatrapdf-*.png packaging/
 
           cat > packaging/PKGBUILD <<'EOF'
@@ -160,18 +174,18 @@ jobs:
           pkgrel=1
           pkgdesc="Native Linux SumatraPDF ng"
           arch=('x86_64')
-          url="https://github.com/sumatrapdfreader/sumatrapdf"
+          url="https://github.com/vipu18/sumatrapdf-linux"
           license=('GPL-3.0-only')
           depends=('glibc' 'gcc-libs' 'libx11'
                    'cairo' 'pango' 'gdk-pixbuf2'
-                   'glib2' 'openssl')
-          source=('SumatraPDF' 'sumatrapdf.desktop'
+                   'glib2' 'openssl' 'shared-mime-info')
+          source=('SumatraPDF' 'sumatrapdf.desktop' 'sumatrapdf.xml'
                   'sumatrapdf-16.png' 'sumatrapdf-24.png'
                   'sumatrapdf-32.png' 'sumatrapdf-48.png'
                   'sumatrapdf-64.png' 'sumatrapdf-128.png'
                   'sumatrapdf-256.png')
           sha256sums=('SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP'
-                      'SKIP' 'SKIP' 'SKIP' 'SKIP')
+                      'SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP')
           options=('!strip' '!debug')
 
           package() {
@@ -180,6 +194,9 @@ jobs:
 
             install -Dm644 "$srcdir/sumatrapdf.desktop" \
               "$pkgdir/usr/share/applications/sumatrapdf.desktop"
+
+            install -Dm644 "$srcdir/sumatrapdf.xml" \
+              "$pkgdir/usr/share/mime/packages/sumatrapdf.xml"
 
             for size in 16 24 32 48 64 128 256; do
               install -Dm644 "$srcdir/sumatrapdf-$size.png" \
@@ -211,7 +228,8 @@ jobs:
           {
             echo "Application: SumatraPDF ng"
             echo "Platform: Linux x86_64"
-            echo "Official base tag: 3.6.1rel"
+            echo "Reference tag: 3.6.1rel"
+            echo "3.6.1 ancestry: ${RELEASE_361_ANCESTRY}"
             echo "Source commit: $(git rev-parse HEAD)"
             echo "Source branch: ${GITHUB_REF_NAME}"
             echo "GitHub run: ${GITHUB_RUN_NUMBER}"

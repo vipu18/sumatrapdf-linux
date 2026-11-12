@@ -2662,6 +2662,9 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y) {
     HideToolbarHoverDropdown(win);
     win->pressOnlyDeselected = false;
     RefHoverOnCanvasLeftButtonDown(win->refHover);
+    if (MeasurementHandleClick(win, Point{x, y})) {
+        return;
+    }
     if (ReadingBarOnLeftDown(win, x, y)) {
         return;
     }
@@ -3685,6 +3688,11 @@ void DocCanvasView::OnPaint(gp::PaintCtx* ctx, gp::El* e, void* user) {
     }
     if (win->showSelection) {
         PaintSelection(win, ctx);
+    }
+    if (win->measureHasResult && dmHl && dmHl->PageVisible(win->measureResultPage)) {
+        Point measureStart = dmHl->CvtToScreen(win->measureResultPage, win->measureResultStart);
+        Point measureEnd = dmHl->CvtToScreen(win->measureResultPage, win->measureResultEnd);
+        CanvasDrawLine(ctx, measureStart, measureEnd, MkRgb(220, 50, 30), 2.0f);
     }
     PaintAnnotationPlacement(win, ctx, win->AsFixed());
     PaintHoveredAnnotationMark(win, ctx, win->AsFixed());

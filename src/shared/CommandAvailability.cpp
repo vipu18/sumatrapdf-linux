@@ -1035,14 +1035,8 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         }
     }
 
-    if (cmdId == CmdMeasure) {
-#if defined(SUMATRA_NG)
+    if (cmdId == CmdMeasure && !ctx.isFixedPage) {
         return CommandVisibility::Hide;
-#else
-        if (!ctx.isFixedPage) {
-            return CommandVisibility::Hide;
-        }
-#endif
     }
 
     return MapForSurface(CommandVisibility::Show, surface);
