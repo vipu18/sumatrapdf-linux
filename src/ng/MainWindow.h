@@ -345,6 +345,10 @@ struct MainWindow {
     bool measureHasStart = false;
     int measureStartPage = 0;
     PointF measureStart;
+    bool measureHasResult = false;
+    int measureResultPage = 0;
+    PointF measureResultStart;
+    PointF measureResultEnd;
     // moving / resizing an existing rectangular selection
     SelectionDragEdge selectionDragEdge = SelectionDragEdge::None;
     Rect selectionEditOrig;
