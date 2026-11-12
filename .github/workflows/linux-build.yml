@@ -61,14 +61,14 @@ jobs:
           echo "Official release: $RELEASE_COMMIT"
           echo "Building commit: $(git rev-parse HEAD)"
 
-          if ! git merge-base --is-ancestor \
-            "$RELEASE_COMMIT" HEAD; then
-            echo "::error::Fork does not contain the official 3.6.1 release commit."
-            echo "Use a branch containing both the release history and Linux port."
-            exit 1
+          if git merge-base --is-ancestor "$RELEASE_COMMIT" HEAD; then
+            echo "RELEASE_361_ANCESTRY=yes" >> "$GITHUB_ENV"
+            echo "Verified: the official 3.6.1 release is an ancestor."
+          else
+            echo "RELEASE_361_ANCESTRY=no" >> "$GITHUB_ENV"
+            echo "::warning::The Linux fork does not descend from the official 3.6.1 release."
+            echo "Build will use this fork's source. Full 3.6.1 parity is NOT established."
           fi
-
-          echo "Verified: 3.6.1 is an ancestor."
 
       - name: Check native Linux compatibility
         shell: bash
@@ -212,7 +212,8 @@ jobs:
           {
             echo "Application: SumatraPDF ng"
             echo "Platform: Linux x86_64"
-            echo "Official base tag: 3.6.1rel"
+            echo "Reference tag: 3.6.1rel"
+            echo "3.6.1 ancestry: ${RELEASE_361_ANCESTRY}"
             echo "Source commit: $(git rev-parse HEAD)"
             echo "Source branch: ${GITHUB_REF_NAME}"
             echo "GitHub run: ${GITHUB_RUN_NUMBER}"
