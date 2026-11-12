@@ -2310,9 +2310,16 @@ bool MeasurementHandleClick(MainWindow* win, Point screenPt) {
     double dy = (double)pt.y - win->measureStart.y;
     EngineBase* engine = dm->GetEngine();
     double scale = engine && engine->fileDPI > 0 ? 72.0 / engine->fileDPI : 1.0;
+    Str unit = StrL("pt");
+    WindowTab* tab = win->CurrentTab();
+    FileState* fs = tab ? FileHistoryFindByPath(tab->filePath) : nullptr;
+    if (fs && isfinite(fs->measurementScale) && fs->measurementScale > 0 && len(fs->measurementUnit) > 0) {
+        scale = fs->measurementScale;
+        unit = fs->measurementUnit;
+    }
     double length = sqrt(dx * dx + dy * dy) * scale;
     win->measureHasStart = false;
-    ShowTemporaryNotification(win, fmt("Length: %.4g pt (x %.4g, y %.4g)", length, fabs(dx) * scale,
+    ShowTemporaryNotification(win, fmt("Length: %.4g %s (x %.4g, y %.4g)", length, unit, fabs(dx) * scale,
                                        fabs(dy) * scale),
                               kNotif5SecsTimeOut);
     return true;
