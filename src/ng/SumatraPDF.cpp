@@ -2276,6 +2276,48 @@ void PageInfoBarChanged(MainWindow* win) {
     AppShellInvalidate(win);
 }
 
+// First ng measurement interaction. Page-space points survive zoom/scroll.
+// The other Windows measurement modes still need the GPUI toolbar port.
+bool MeasurementHandleClick(MainWindow* win, Point screenPt) {
+    if (!win || !win->measureActive) {
+        return false;
+    }
+    DisplayModel* dm = win->AsFixed();
+    if (!dm) {
+        win->measureActive = false;
+        win->measureHasStart = false;
+        return false;
+    }
+
+    int pageNo = dm->GetPageNoByPoint(screenPt);
+    if (!dm->ValidPageNo(pageNo)) {
+        return true;
+    }
+    PointF pt = dm->CvtFromScreen(screenPt, pageNo);
+    if (!win->measureHasStart) {
+        win->measureStart = pt;
+        win->measureStartPage = pageNo;
+        win->measureHasStart = true;
+        ShowTemporaryNotification(win, Tr("Measure: select the end point."));
+        return true;
+    }
+    if (pageNo != win->measureStartPage) {
+        ShowTemporaryNotification(win, Tr("Select both points on the same page."));
+        return true;
+    }
+
+    double dx = (double)pt.x - win->measureStart.x;
+    double dy = (double)pt.y - win->measureStart.y;
+    EngineBase* engine = dm->GetEngine();
+    double scale = engine && engine->fileDPI > 0 ? 72.0 / engine->fileDPI : 1.0;
+    double length = sqrt(dx * dx + dy * dy) * scale;
+    win->measureHasStart = false;
+    ShowTemporaryNotification(win, fmt("Length: %.4g pt (x %.4g, y %.4g)", length, fabs(dx) * scale,
+                                       fabs(dy) * scale),
+                              kNotif5SecsTimeOut);
+    return true;
+}
+
 // --- the cursor-position tip, CmdToggleCursorPosition ----------------------
 
 void UpdateCursorPositionHelper(MainWindow* win, Point pos, NotificationWnd* wnd) {
@@ -6453,6 +6495,16 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
 
         case CmdOpenSettingsFile:
             OpenSettingsFile();
+            break;
+
+        case CmdMeasure:
+            if (win->AsFixed()) {
+                win->measureActive = !win->measureActive;
+                win->measureHasStart = false;
+                ShowTemporaryNotification(win,
+                                          win->measureActive ? Tr("Measure: select the start point.")
+                                                             : Tr("Measurement closed."));
+            }
             break;
 
         case CmdTogglePageGrid:
