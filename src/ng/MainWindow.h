@@ -340,6 +340,11 @@ struct MainWindow {
     Rect selectionRect;
     // size of a rectangular selection in the document's units
     SizeF selectionMeasure;
+    // First stage of the ng measurement tool: page-space point pairs.
+    bool measureActive = false;
+    bool measureHasStart = false;
+    int measureStartPage = 0;
+    PointF measureStart;
     // moving / resizing an existing rectangular selection
     SelectionDragEdge selectionDragEdge = SelectionDragEdge::None;
     Rect selectionEditOrig;
