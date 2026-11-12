@@ -3689,6 +3689,11 @@ void DocCanvasView::OnPaint(gp::PaintCtx* ctx, gp::El* e, void* user) {
     if (win->showSelection) {
         PaintSelection(win, ctx);
     }
+    if (win->measureHasResult && dmHl && dmHl->PageVisible(win->measureResultPage)) {
+        Point a = dmHl->CvtToScreen(win->measureResultPage, win->measureResultStart);
+        Point b = dmHl->CvtToScreen(win->measureResultPage, win->measureResultEnd);
+        CanvasDrawLine(ctx, a, b, MkRgb(220, 50, 30), 2.0f);
+    }
     PaintAnnotationPlacement(win, ctx, win->AsFixed());
     PaintHoveredAnnotationMark(win, ctx, win->AsFixed());
     PaintCurrentEditAnnotationMark(win->CurrentTab(), ctx, win->AsFixed());
