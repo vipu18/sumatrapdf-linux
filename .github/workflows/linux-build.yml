@@ -34,10 +34,22 @@ jobs:
             pango \
             gdk-pixbuf2 \
             glib2 \
+            fontconfig \
+            ttf-dejavu \
+            ttf-liberation \
             openssl \
             zstd \
             file \
             shadow
+
+      - name: Verify font configuration for rendering tests
+        shell: bash
+        run: |
+          fc-cache -f
+          fc-list | head -n 5 || true
+          test -n "$(fc-match -f '%{file}' sans-serif)"
+          test -n "$(fc-match -f '%{file}' serif)"
+          test -n "$(fc-match -f '%{file}' monospace)"
 
       - name: Checkout fork
         uses: actions/checkout@v4
