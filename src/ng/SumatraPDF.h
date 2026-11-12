@@ -19,6 +19,8 @@ struct RenderCache;
 extern RenderCache* gRenderCache;
 
 struct MainWindow;
+// Distance-measurement interaction for the native document canvas.
+bool MeasurementHandleClick(MainWindow* win, Point screenPt);
 struct WindowTab;
 struct DocController;
 struct DocControllerCallback;
