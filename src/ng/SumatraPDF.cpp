@@ -2318,7 +2318,12 @@ bool MeasurementHandleClick(MainWindow* win, Point screenPt) {
         unit = fs->measurementUnit;
     }
     double length = sqrt(dx * dx + dy * dy) * scale;
+    win->measureResultStart = win->measureStart;
+    win->measureResultEnd = pt;
+    win->measureResultPage = pageNo;
+    win->measureHasResult = true;
     win->measureHasStart = false;
+    AppShellInvalidate(win);
     ShowTemporaryNotification(win, fmt("Length: %.4g %s (x %.4g, y %.4g)", length, unit, fabs(dx) * scale,
                                        fabs(dy) * scale),
                               kNotif5SecsTimeOut);
@@ -6508,6 +6513,8 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             if (win->AsFixed()) {
                 win->measureActive = !win->measureActive;
                 win->measureHasStart = false;
+                win->measureHasResult = false;
+                AppShellInvalidate(win);
                 ShowTemporaryNotification(win,
                                           win->measureActive ? Tr("Measure: select the start point.")
                                                              : Tr("Measurement closed."));
